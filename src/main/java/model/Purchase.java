@@ -3,7 +3,6 @@ package model;
 import java.time.LocalDateTime;
 
 public class Purchase {
-    private int id;
     private int userId;
     private int tourId;
     private int quantity;
@@ -11,17 +10,12 @@ public class Purchase {
 
     public Purchase() {}
 
-    public Purchase(int id, int userId, int tourId, int quantity, LocalDateTime purchaseDate) {
-        this.id = id;
+    public Purchase(int userId, int tourId, int quantity, LocalDateTime purchaseDate) {
         this.userId = userId;
         this.tourId = tourId;
         this.quantity = quantity;
         this.purchaseDate = purchaseDate;
     }
-
-    public int getId() { return id; }
-
-    public void setId(int id) { this.id = id; }
 
     public int getUserId() { return userId; }
 

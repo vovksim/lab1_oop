@@ -11,16 +11,11 @@ public class AuthToken {
 
     public AuthToken() {}
 
-    public AuthToken(int id, int userId, String token, LocalDateTime createdAt) {
-        this.id = id;
+    public AuthToken(int userId, String token, LocalDateTime createdAt) {
         this.userId = userId;
         this.token = token;
         this.createdAt = createdAt;
     }
-
-    public int getId() { return id; }
-
-    public void setId(int id) { this.id = id; }
 
     public int getUserId() { return userId; }
 
