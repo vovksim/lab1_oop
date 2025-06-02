@@ -8,33 +8,59 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 @WebServlet("/TourSys/*")
 public class FrontController extends HttpServlet {
 
+    private static final Logger logger = LoggerFactory.getLogger(FrontController.class);
+
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
+
+        logger.info("Incoming request: {} {}?{}", method, uri, query != null ? query : "");
+
         String action = extractAction(request);
         String id = extractId(request);
 
+        logger.debug("Resolved action: {}", action);
         if (id != null) {
+            logger.debug("Resolved id: {}", id);
             request.setAttribute("id", id);
         }
 
         CommandInterface command = CommandFactory.getCommand(action);
+        if (command == null) {
+            logger.warn("No command found for action: {}", action);
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Unknown action: " + action);
+            return;
+        }
 
-        switch (request.getMethod()) {
-            case "GET":
-                command.doGet(request, response);
-                break;
-            case "POST":
-                command.doPost(request, response);
-                break;
-            default:
-                response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "HTTP method not supported");
+        try {
+            switch (method) {
+                case "GET":
+                    logger.info("Dispatching to GET handler for action: {}", action);
+                    command.doGet(request, response);
+                    break;
+                case "POST":
+                    logger.info("Dispatching to POST handler for action: {}", action);
+                    command.doPost(request, response);
+                    break;
+                default:
+                    logger.error("Unsupported HTTP method: {}", method);
+                    response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "HTTP method not supported");
+            }
+        } catch (Exception e) {
+            logger.error("Exception while handling action '{}'", action, e);
+            throw new ServletException(e);
         }
     }
 
@@ -42,14 +68,12 @@ public class FrontController extends HttpServlet {
      * Extract action from query param or REST path.
      */
     private String extractAction(HttpServletRequest request) {
-        // 1. Try query parameter
         String action = request.getParameter("action");
         if (action != null && !action.isEmpty()) {
             return action;
         }
 
-        // 2. Try REST path, e.g. /detail/42 or /login
-        String path = request.getPathInfo(); // "/detail/42"
+        String path = request.getPathInfo();
         if (path != null && !path.equals("/")) {
             String[] parts = path.split("/");
             if (parts.length > 1 && parts[1] != null && !parts[1].isEmpty()) {
@@ -57,7 +81,7 @@ public class FrontController extends HttpServlet {
             }
         }
 
-        // 3. Default fallback - use "login" here, not "default"
+        logger.debug("No action found in request, defaulting to 'login'");
         return "login";
     }
 
@@ -65,13 +89,11 @@ public class FrontController extends HttpServlet {
      * Extract id from query param or REST path.
      */
     private String extractId(HttpServletRequest request) {
-        // 1. Try query parameter
         String id = request.getParameter("id");
         if (id != null && !id.isEmpty()) {
             return id;
         }
 
-        // 2. Try REST path
         String path = request.getPathInfo();
         if (path != null && !path.equals("/")) {
             String[] parts = path.split("/");
@@ -80,7 +102,6 @@ public class FrontController extends HttpServlet {
             }
         }
 
-        // 3. No id found
         return null;
     }
 }

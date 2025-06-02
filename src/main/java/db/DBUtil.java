@@ -10,19 +10,22 @@ public class DBUtil {
     private static final HikariDataSource dataSource;
 
     static {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:mysql://localhost:3306/toursystem");
-        config.setUsername("root");
-        config.setPassword("passwd");
+        try {
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:mysql://localhost:3306/toursystem");
+            config.setUsername("root");
+            config.setPassword("passwd");
+            config.setMaximumPoolSize(10);
+            config.setMinimumIdle(2);
+            config.setIdleTimeout(60000);
+            config.setMaxLifetime(1800000);
+            config.setConnectionTimeout(30000);
+            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
 
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setIdleTimeout(60000);
-        config.setMaxLifetime(1800000);
-        config.setConnectionTimeout(30000);
-        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
-
-        dataSource = new HikariDataSource(config);
+            dataSource = new HikariDataSource(config);
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError("Failed to initialize HikariCP datasource: " + e.getMessage());
+        }
     }
 
     private DBUtil() {}
