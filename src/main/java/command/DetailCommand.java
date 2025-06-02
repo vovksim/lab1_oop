@@ -1,10 +1,8 @@
-package controllers;
+package command;
 
 import dao.TourDAO;
 import dao.impl.JdbcTourDAOImpl;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Tour;
@@ -12,29 +10,30 @@ import model.Tour;
 import java.io.IOException;
 import java.util.Optional;
 
-@WebServlet(name = "DetailServlet", urlPatterns = {"/detail"})
-public class DetailServlet extends HttpServlet {
+public class DetailCommand implements CommandInterface {
 
-    private TourDAO tourDAO;
-
-    @Override
-    public void init() throws ServletException {
-        tourDAO = new JdbcTourDAOImpl();  // Initialize DAO, can be improved with DI
-    }
+    private final TourDAO tourDAO = new JdbcTourDAOImpl();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String tourIdParam = request.getParameter("id");
+        // Extract "id" from query or attribute (FrontController may set it)
+        String idParam = request.getParameter("id");
+        if (idParam == null) {
+            Object idAttr = request.getAttribute("id");
+            if (idAttr != null) {
+                idParam = idAttr.toString();
+            }
+        }
 
-        if (tourIdParam == null || tourIdParam.isEmpty()) {
+        if (idParam == null || idParam.isEmpty()) {
             response.sendRedirect("home");
             return;
         }
 
         try {
-            int tourId = Integer.parseInt(tourIdParam);
+            int tourId = Integer.parseInt(idParam);
             Optional<Tour> tourOpt = tourDAO.findById(tourId);
 
             if (tourOpt.isPresent()) {
@@ -47,5 +46,11 @@ public class DetailServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             response.sendRedirect("home");
         }
+    }
+
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.sendRedirect("home"); // or send an error
     }
 }
