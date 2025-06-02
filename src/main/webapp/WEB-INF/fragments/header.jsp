@@ -34,7 +34,7 @@
 </head>
 <body>
 <nav>
-  <a href="main">Main</a>
+  <a href="home">Main</a>
   <a href="profile">Profile</a>
   <a href="logout">Logout</a>
 </nav>
